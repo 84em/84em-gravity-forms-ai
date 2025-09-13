@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/9.6/phpunit.xsd"
+	bootstrap="tests/bootstrap.php"
+	colors="true"
+	convertErrorsToExceptions="true"
+	convertNoticesToExceptions="true"
+	convertWarningsToExceptions="true"
+	processIsolation="false"
+	stopOnFailure="false"
+	failOnWarning="true"
+	failOnRisky="true"
+	beStrictAboutTestsThatDoNotTestAnything="false"
+	verbose="true"
+>
+	<testsuites>
+		<testsuite name="unit">
+			<directory suffix="Test.php">./tests/unit</directory>
+		</testsuite>
+		<testsuite name="integration">
+			<directory suffix="Test.php">./tests/integration</directory>
+		</testsuite>
+		<testsuite name="all">
+			<directory suffix="Test.php">./tests</directory>
+		</testsuite>
+	</testsuites>
+
+	<coverage processUncoveredFiles="true">
+		<include>
+			<directory suffix=".php">./includes</directory>
+			<file>./84em-gravity-forms-ai.php</file>
+		</include>
+		<exclude>
+			<directory>./tests</directory>
+			<directory>./vendor</directory>
+			<directory>./assets</directory>
+		</exclude>
+		<report>
+			<clover outputFile="coverage.xml"/>
+			<html outputDirectory="coverage-report"/>
+			<text outputFile="coverage.txt" showUncoveredFiles="true" showOnlySummary="false"/>
+		</report>
+	</coverage>
+
+	<php>
+		<const name="WP_TESTS_DOMAIN" value="example.org"/>
+		<const name="WP_TESTS_EMAIL" value="admin@example.org"/>
+		<const name="WP_TESTS_TITLE" value="Test Blog"/>
+		<const name="WP_PHP_BINARY" value="php"/>
+		<const name="DISABLE_WP_CRON" value="true"/>
+		<const name="WP_DEBUG" value="true"/>
+		<const name="WP_DEBUG_LOG" value="true"/>
+		<const name="WP_DEBUG_DISPLAY" value="false"/>
+		<const name="SCRIPT_DEBUG" value="true"/>
+	</php>
+</phpunit>

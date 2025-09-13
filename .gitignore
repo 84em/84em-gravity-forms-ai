@@ -44,3 +44,10 @@ wp-config.php
 # package-lock.json
 # yarn.lock
 # composer.lock
+
+# Testing
+.phpunit.result.cache
+.phpunit.cache/
+coverage-report/
+coverage.xml
+coverage.txt
