@@ -61,7 +61,8 @@ cp assets/js/*.min.js "$BUILD_DIR/$PLUGIN_NAME/assets/js/" 2>/dev/null || true
 cp -r includes "$BUILD_DIR/$PLUGIN_NAME/"
 cp -r languages "$BUILD_DIR/$PLUGIN_NAME/" 2>/dev/null || mkdir "$BUILD_DIR/$PLUGIN_NAME/languages"
 cp 84em-gravity-forms-ai.php "$BUILD_DIR/$PLUGIN_NAME/"
-cp readme.txt "$BUILD_DIR/$PLUGIN_NAME/"
+cp README.md "$BUILD_DIR/$PLUGIN_NAME/"
+cp CHANGELOG.md "$BUILD_DIR/$PLUGIN_NAME/"
 
 # Create ZIP file
 echo "📦 Creating ZIP archive..."
