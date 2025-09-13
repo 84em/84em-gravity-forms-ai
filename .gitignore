@@ -1,0 +1,46 @@
+# Dependencies
+node_modules/
+vendor/
+
+# Build artifacts
+build/
+*.zip
+
+# Minified files and source maps
+assets/css/*.min.css
+assets/css/*.map
+assets/js/*.min.js
+assets/js/*.map
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment files
+.env
+.env.local
+
+# WordPress
+wp-config.php
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*~
+
+# Package lock files (optional - uncomment if you prefer not to commit these)
+# package-lock.json
+# yarn.lock
+# composer.lock
