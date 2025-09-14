@@ -91,7 +91,7 @@ class EntryProcessor {
 
             // Save AI analysis as entry meta (raw markdown)
             gform_update_meta( $entry['id'], '84em_ai_analysis', $analysis_result );
-            gform_update_meta( $entry['id'], '84em_ai_analysis_date', current_time( 'mysql' ) );
+            gform_update_meta( $entry['id'], '84em_ai_analysis_date', wp_date( 'Y-m-d H:i:s' ) );
 
             // Fire action after successful analysis
             do_action( '84em_gf_ai_after_analysis', $entry['id'], $analysis_result, $form['id'] );
@@ -101,7 +101,7 @@ class EntryProcessor {
         else {
             // Log error in meta as well for consistency
             gform_update_meta( $entry['id'], '84em_ai_analysis_error', $result['error'] );
-            gform_update_meta( $entry['id'], '84em_ai_analysis_error_date', current_time( 'mysql' ) );
+            gform_update_meta( $entry['id'], '84em_ai_analysis_error_date', wp_date( 'Y-m-d H:i:s' ) );
 
             // Fire action when analysis fails
             do_action( '84em_gf_ai_analysis_failed', $entry['id'], $result['error'], $form['id'] );

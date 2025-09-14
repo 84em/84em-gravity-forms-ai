@@ -168,11 +168,11 @@ class APIHandler {
         // Replace variables in prompt
         $replacements = [
             '{form_data}'         => isset( $data['form_data'] ) ? $this->format_form_data( $data['form_data'] ) : '',
-            '{form_title}'        => isset( $data['form_title'] ) ? $data['form_title'] : '',
-            '{submitter_name}'    => isset( $data['submitter_name'] ) ? $data['submitter_name'] : '',
-            '{submitter_email}'   => isset( $data['submitter_email'] ) ? $data['submitter_email'] : '',
-            '{submitter_company}' => isset( $data['submitter_company'] ) ? $data['submitter_company'] : '',
-            '{submission_date}'   => isset( $data['submission_date'] ) ? $data['submission_date'] : current_time( 'mysql' ),
+            '{form_title}'        => $data['form_title'] ?? '',
+            '{submitter_name}'    => $data['submitter_name'] ?? '',
+            '{submitter_email}'   => $data['submitter_email'] ?? '',
+            '{submitter_company}' => $data['submitter_company'] ?? '',
+            '{submission_date}'   => $data['submission_date'] ?? wp_date( 'Y-m-d H:i:s' ),
         ];
 
         $message = str_replace(
@@ -291,7 +291,7 @@ class APIHandler {
                 'request'       => json_encode( $request_to_log ),
                 'response'      => $response_text,
                 'error_message' => $error_message,
-                'created_at'    => current_time( 'mysql' ),
+                'created_at'    => wp_date( 'Y-m-d H:i:s' ),
             ],
             [ '%d', '%d', '%s', '%s', '%s', '%s', '%s' ]
         );
