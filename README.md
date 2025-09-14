@@ -45,10 +45,13 @@ WordPress plugin that integrates Claude AI with Gravity Forms to provide intelli
 84em-gravity-forms-ai/
 ├── assets/
 │   ├── css/
-│   │   └── admin.css             # Admin styles (source)
+│   │   ├── admin.css             # Admin styles (source)
+│   │   └── admin.min.css         # Minified admin styles
 │   └── js/
 │       ├── admin.js              # Admin scripts (source)
-│       └── markdown-formatter.js # Markdown to HTML converter
+│       └── admin.min.js          # Minified admin scripts
+├── bin/
+│   └── install-wp-tests.sh      # WordPress test suite installer
 ├── includes/
 │   ├── Admin/
 │   │   └── Settings.php          # Admin settings interface
@@ -56,14 +59,32 @@ WordPress plugin that integrates Claude AI with Gravity Forms to provide intelli
 │       ├── APIHandler.php        # Claude API integration
 │       ├── Encryption.php        # API key encryption
 │       └── EntryProcessor.php    # Form submission processing
-├── languages/                    # Translation files
+├── tests/
+│   ├── integration/
+│   │   └── IntegrationTest.php   # End-to-end tests
+│   ├── unit/
+│   │   ├── ApiHandlerTest.php    # API handler tests
+│   │   ├── EncryptionTest.php    # Encryption tests
+│   │   ├── EntryProcessorTest.php # Entry processor tests
+│   │   ├── PluginTest.php        # Main plugin tests
+│   │   └── SettingsTest.php      # Settings tests
+│   ├── bootstrap.php             # PHPUnit bootstrap
+│   ├── class-test-case.php       # Base test case class
+│   ├── README.md                 # Testing documentation
+│   ├── SimpleTest.php            # Basic test verification
+│   └── TEST-PLAN.md             # Test coverage plan
 ├── 84em-gravity-forms-ai.php     # Main plugin file
-├── CLAUDE.md                     # AI assistant instructions
-├── MARKDOWN-FORMATTING.md        # Markdown implementation docs
-├── readme.txt                    # WordPress.org readme
-├── package.json                  # NPM dependencies
 ├── build.sh                      # Build script
-└── .gitignore                   # Git ignore rules
+├── CHANGELOG.md                  # Version history
+├── CLAUDE.md                     # AI assistant instructions
+├── composer.json                 # PHP dependencies
+├── composer.lock                 # Dependency lock file
+├── package.json                  # NPM dependencies
+├── package-lock.json             # NPM lock file
+├── phpunit.xml.dist              # PHPUnit configuration
+├── README.md                     # This file
+├── uninstall.php                 # Clean uninstall handler
+└── .gitignore                    # Git ignore rules
 ```
 
 ### Build Process
@@ -131,6 +152,8 @@ This will:
 
 ### Testing
 
+#### Manual Testing
+
 1. Enable WP_DEBUG in `wp-config.php`:
    ```php
    define('WP_DEBUG', true);
@@ -143,6 +166,36 @@ This will:
 4. Check markdown storage in entry meta
 5. Test HTML export with Marked.js conversion
 6. Verify client-side markdown rendering
+
+#### Automated Testing
+
+The plugin includes a comprehensive PHPUnit test suite with 127+ tests:
+
+1. **Install dependencies**:
+   ```bash
+   composer install
+   ```
+
+2. **Set up WordPress test environment**:
+   ```bash
+   ./bin/install-wp-tests.sh local root root localhost latest true
+   ```
+
+3. **Run tests**:
+   ```bash
+   export WP_TESTS_DIR=/tmp/wordpress-tests-lib
+   ./vendor/bin/phpunit
+
+   # Or run with readable output
+   ./vendor/bin/phpunit --testdox
+   ```
+
+4. **Generate coverage report** (requires Xdebug):
+   ```bash
+   XDEBUG_MODE=coverage ./vendor/bin/phpunit --coverage-html coverage-report
+   ```
+
+See `tests/README.md` for detailed testing documentation.
 
 ## Configuration
 
