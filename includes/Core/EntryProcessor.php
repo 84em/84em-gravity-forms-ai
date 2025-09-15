@@ -24,6 +24,9 @@ class EntryProcessor {
 
         // AJAX handler for HTML download
         add_action( 'wp_ajax_84em_gf_ai_download_html', [ $this, 'ajax_download_html' ] );
+
+        // AJAX handler for deleting analysis
+        add_action( 'wp_ajax_84em_gf_ai_delete_analysis', [ $this, 'ajax_delete_analysis' ] );
     }
 
     /**
@@ -337,13 +340,17 @@ class EntryProcessor {
                     <p style="color: #666; font-style: italic; margin-bottom: 15px;">
                         <?php esc_html_e( 'Analysis completed. Click "View Report" to see the full formatted analysis in a new tab.', '84em-gf-ai' ); ?>
                     </p>
-                    <div style="display: flex; gap: 10px;">
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                         <button type="button" class="button reanalyze-entry" data-entry-id="<?php echo esc_attr( $entry['id'] ); ?>" data-form-id="<?php echo esc_attr( $form['id'] ); ?>">
                             <?php esc_html_e( 'Re-analyze', '84em-gf-ai' ); ?>
                         </button>
                         <button type="button" class="button save-as-html" data-entry-id="<?php echo esc_attr( $entry['id'] ); ?>" data-form-id="<?php echo esc_attr( $form['id'] ); ?>">
                             <span class="dashicons dashicons-visibility" style="vertical-align: middle; margin-right: 3px;"></span>
                             <?php esc_html_e( 'View Report', '84em-gf-ai' ); ?>
+                        </button>
+                        <button type="button" class="button delete-analysis" data-entry-id="<?php echo esc_attr( $entry['id'] ); ?>" style="color: #a00;">
+                            <span class="dashicons dashicons-trash" style="vertical-align: middle; margin-right: 3px;"></span>
+                            <?php esc_html_e( 'Delete', '84em-gf-ai' ); ?>
                         </button>
                     </div>
                 <?php else : ?>
@@ -384,6 +391,37 @@ class EntryProcessor {
                     } ).fail( function ( jqXHR, textStatus, errorThrown ) {
                         alert( '<?php echo esc_js( __( 'Request failed. Please try again.', '84em-gf-ai' ) ); ?>' );
                         button.prop( 'disabled', false ).text( originalText );
+                    } );
+                } );
+
+                $( '.delete-analysis' ).on( 'click', function ( e ) {
+                    e.preventDefault();
+
+                    if ( ! confirm( '<?php echo esc_js( __( 'Are you sure you want to delete this AI analysis? This action cannot be undone.', '84em-gf-ai' ) ); ?>' ) ) {
+                        return;
+                    }
+
+                    var button = $( this );
+                    var entryId = button.data( 'entry-id' );
+                    var originalHtml = button.html();
+
+                    button.prop( 'disabled', true ).html( '<span class="spinner is-active" style="float: none; margin: 0;"></span> <?php echo esc_js( __( 'Deleting...', '84em-gf-ai' ) ); ?>' );
+
+                    $.post( ajaxurl, {
+                        action   : '84em_gf_ai_delete_analysis',
+                        entry_id : entryId,
+                        nonce    : '<?php echo wp_create_nonce( '84em_gf_ai_delete' ); ?>'
+                    }, function ( response ) {
+                        if ( response.success ) {
+                            location.reload();
+                        }
+                        else {
+                            alert( response.data.message || '<?php echo esc_js( __( 'Failed to delete analysis', '84em-gf-ai' ) ); ?>' );
+                            button.prop( 'disabled', false ).html( originalHtml );
+                        }
+                    } ).fail( function () {
+                        alert( '<?php echo esc_js( __( 'Request failed. Please try again.', '84em-gf-ai' ) ); ?>' );
+                        button.prop( 'disabled', false ).html( originalHtml );
                     } );
                 } );
 
@@ -475,6 +513,46 @@ class EntryProcessor {
                 'message' => $error_message,
             ] );
         }
+    }
+
+    /**
+     * AJAX handler for deleting analysis
+     */
+    public function ajax_delete_analysis() {
+        check_ajax_referer( '84em_gf_ai_delete', 'nonce' );
+
+        if ( ! current_user_can( 'gravityforms_edit_entries' ) && ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( [
+                'message' => __( 'Insufficient permissions', '84em-gf-ai' ),
+            ] );
+        }
+
+        $entry_id = intval( $_POST['entry_id'] );
+
+        // Verify entry exists
+        $entry = \GFAPI::get_entry( $entry_id );
+        if ( is_wp_error( $entry ) ) {
+            wp_send_json_error( [
+                'message' => __( 'Invalid entry', '84em-gf-ai' ),
+            ] );
+        }
+
+        // Delete all AI analysis meta data
+        gform_delete_meta( $entry_id, '84em_ai_analysis' );
+        gform_delete_meta( $entry_id, '84em_ai_analysis_date' );
+        gform_delete_meta( $entry_id, '84em_ai_analysis_error' );
+        gform_delete_meta( $entry_id, '84em_ai_analysis_error_date' );
+
+        // Add note to entry
+        \GFAPI::add_note( $entry_id, 0, __( 'AI Analysis', '84em-gf-ai' ),
+            sprintf( __( 'AI Analysis deleted by %s', '84em-gf-ai' ), wp_get_current_user()->display_name ) );
+
+        // Fire action after deletion
+        do_action( '84em_gf_ai_analysis_deleted', $entry_id );
+
+        wp_send_json_success( [
+            'message' => __( 'Analysis deleted successfully', '84em-gf-ai' ),
+        ] );
     }
 
     /**
