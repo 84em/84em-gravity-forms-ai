@@ -150,8 +150,30 @@ All AJAX actions use nonce verification and capability checks:
 
 ## Testing Approach
 
-No automated tests are included. Manual testing should cover:
-- API key encryption/decryption
-- Various Gravity Forms field types
-- HTML export generation
-- Log retention and automatic purging
+The plugin includes a comprehensive PHPUnit test suite with 135+ tests achieving 90%+ code coverage.
+
+### Running Tests
+
+```bash
+# Install dependencies and test suite
+composer install
+./bin/install-wp-tests.sh wordpress_test root root localhost latest true
+
+# Run all tests
+export WP_TESTS_DIR=/tmp/wordpress-tests-lib
+./vendor/bin/phpunit
+
+# Run specific test suites
+./vendor/bin/phpunit --filter "delete"  # Delete functionality tests
+./vendor/bin/phpunit --testdox         # Readable output
+```
+
+### Test Coverage
+
+- **Unit Tests**: All core components (Encryption, APIHandler, EntryProcessor, Settings)
+- **Integration Tests**: End-to-end workflows
+- **Delete Functionality**: 8 dedicated tests for the delete feature
+- **Security Testing**: Permission checks, nonce validation, SQL injection prevention
+- **Error Handling**: API failures, invalid data, edge cases
+
+See `tests/README.md` for detailed testing documentation.

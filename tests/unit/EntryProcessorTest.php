@@ -556,4 +556,233 @@ class EntryProcessorTest extends TestCase {
 
 		$this->assertEquals( 'Jane Smith', $name );
 	}
+
+	/**
+	 * Test AJAX delete analysis with valid permissions
+	 */
+	public function test_ajax_delete_analysis_success() {
+		// Set up user with proper permissions
+		$user_id = $this->factory()->user->create( [ 'role' => 'administrator' ] );
+		wp_set_current_user( $user_id );
+
+		// Add analysis data to entry meta
+		gform_update_meta( 1, '84em_ai_analysis', 'Test analysis content' );
+		gform_update_meta( 1, '84em_ai_analysis_date', '2025-01-15 10:00:00' );
+
+		// Set up POST data
+		$_POST['entry_id'] = 1;
+		$_POST['nonce'] = wp_create_nonce( '84em_gf_ai_delete' );
+
+		// Track if action was fired
+		$action_fired = false;
+		add_action( '84em_gf_ai_analysis_deleted', function( $entry_id ) use ( &$action_fired ) {
+			$action_fired = true;
+			$this->assertEquals( 1, $entry_id );
+		} );
+
+		// Mock AJAX request
+		add_filter( 'wp_doing_ajax', '__return_true' );
+
+		// Capture JSON output
+		ob_start();
+		try {
+			$this->processor->ajax_delete_analysis();
+		} catch ( \WPDieException $e ) {
+			// Expected for AJAX responses
+		}
+		$output = ob_get_clean();
+
+		remove_filter( 'wp_doing_ajax', '__return_true' );
+
+		$response = json_decode( $output, true );
+		$this->assertTrue( $response['success'] );
+		$this->assertEquals( 'Analysis deleted successfully', $response['data']['message'] );
+
+		// Verify meta was deleted
+		$this->assertEmpty( gform_get_meta( 1, '84em_ai_analysis' ) );
+		$this->assertEmpty( gform_get_meta( 1, '84em_ai_analysis_date' ) );
+
+		// Verify action was fired
+		$this->assertTrue( $action_fired, 'Delete action should be fired' );
+	}
+
+	/**
+	 * Test AJAX delete analysis without permission
+	 */
+	public function test_ajax_delete_analysis_no_permission() {
+		// Set up user without edit permissions
+		$user_id = $this->factory()->user->create( [ 'role' => 'subscriber' ] );
+		wp_set_current_user( $user_id );
+
+		$_POST['entry_id'] = 1;
+		$_POST['nonce'] = wp_create_nonce( '84em_gf_ai_delete' );
+
+		add_filter( 'wp_doing_ajax', '__return_true' );
+
+		ob_start();
+		try {
+			$this->processor->ajax_delete_analysis();
+		} catch ( \WPDieException $e ) {
+			// Expected
+		}
+		$output = ob_get_clean();
+
+		remove_filter( 'wp_doing_ajax', '__return_true' );
+
+		$response = json_decode( $output, true );
+		$this->assertFalse( $response['success'] );
+		$this->assertEquals( 'Insufficient permissions', $response['data']['message'] );
+	}
+
+	/**
+	 * Test AJAX delete analysis with invalid nonce
+	 */
+	public function test_ajax_delete_analysis_invalid_nonce() {
+		$user_id = $this->factory()->user->create( [ 'role' => 'administrator' ] );
+		wp_set_current_user( $user_id );
+
+		$_POST['entry_id'] = 1;
+		$_POST['nonce'] = 'invalid_nonce';
+
+		add_filter( 'wp_doing_ajax', '__return_true' );
+
+		ob_start();
+		try {
+			$this->processor->ajax_delete_analysis();
+		} catch ( \WPDieException $e ) {
+			// Expected - nonce check fails and dies
+			$this->assertStringContainsString( '-1', $e->getMessage() );
+		}
+		$output = ob_get_clean();
+
+		remove_filter( 'wp_doing_ajax', '__return_true' );
+
+		// Should die with -1 for failed nonce
+		$this->assertEmpty( $output );
+	}
+
+	/**
+	 * Test AJAX delete analysis with invalid entry
+	 */
+	public function test_ajax_delete_analysis_invalid_entry() {
+		$user_id = $this->factory()->user->create( [ 'role' => 'administrator' ] );
+		wp_set_current_user( $user_id );
+
+		$_POST['entry_id'] = 99999; // Non-existent entry
+		$_POST['nonce'] = wp_create_nonce( '84em_gf_ai_delete' );
+
+		add_filter( 'wp_doing_ajax', '__return_true' );
+
+		// Mock GFAPI to return error for invalid entry
+		add_filter( 'gform_get_entry_pre_filter', function( $entry, $entry_id ) {
+			if ( $entry_id == 99999 ) {
+				return new \WP_Error( 'not_found', 'Entry not found' );
+			}
+			return $entry;
+		}, 10, 2 );
+
+		ob_start();
+		try {
+			$this->processor->ajax_delete_analysis();
+		} catch ( \WPDieException $e ) {
+			// Expected
+		}
+		$output = ob_get_clean();
+
+		remove_filter( 'wp_doing_ajax', '__return_true' );
+
+		$response = json_decode( $output, true );
+		$this->assertFalse( $response['success'] );
+		$this->assertEquals( 'Invalid entry', $response['data']['message'] );
+	}
+
+	/**
+	 * Test delete also removes error meta
+	 */
+	public function test_ajax_delete_removes_error_meta() {
+		$user_id = $this->factory()->user->create( [ 'role' => 'administrator' ] );
+		wp_set_current_user( $user_id );
+
+		// Add both success and error meta
+		gform_update_meta( 1, '84em_ai_analysis', 'Test analysis' );
+		gform_update_meta( 1, '84em_ai_analysis_date', '2025-01-15 10:00:00' );
+		gform_update_meta( 1, '84em_ai_analysis_error', 'Previous error' );
+		gform_update_meta( 1, '84em_ai_analysis_error_date', '2025-01-14 09:00:00' );
+
+		$_POST['entry_id'] = 1;
+		$_POST['nonce'] = wp_create_nonce( '84em_gf_ai_delete' );
+
+		add_filter( 'wp_doing_ajax', '__return_true' );
+
+		ob_start();
+		try {
+			$this->processor->ajax_delete_analysis();
+		} catch ( \WPDieException $e ) {
+			// Expected
+		}
+		$output = ob_get_clean();
+
+		remove_filter( 'wp_doing_ajax', '__return_true' );
+
+		// Verify all meta was deleted
+		$this->assertEmpty( gform_get_meta( 1, '84em_ai_analysis' ) );
+		$this->assertEmpty( gform_get_meta( 1, '84em_ai_analysis_date' ) );
+		$this->assertEmpty( gform_get_meta( 1, '84em_ai_analysis_error' ) );
+		$this->assertEmpty( gform_get_meta( 1, '84em_ai_analysis_error_date' ) );
+	}
+
+	/**
+	 * Test delete button appears in display when analysis exists
+	 */
+	public function test_display_shows_delete_button_with_analysis() {
+		// Add analysis data
+		gform_update_meta( 1, '84em_ai_analysis', 'Test analysis content' );
+		gform_update_meta( 1, '84em_ai_analysis_date', '2025-01-15 10:00:00' );
+
+		ob_start();
+		$this->processor->display_ai_analysis( $this->test_form, $this->test_entry );
+		$output = ob_get_clean();
+
+		// Check for delete button
+		$this->assertStringContainsString( 'delete-analysis', $output );
+		$this->assertStringContainsString( 'dashicons-trash', $output );
+		$this->assertStringContainsString( 'Delete', $output );
+		$this->assertStringContainsString( 'data-entry-id="1"', $output );
+	}
+
+	/**
+	 * Test delete button does not appear when no analysis
+	 */
+	public function test_display_no_delete_button_without_analysis() {
+		// Ensure no analysis data exists
+		gform_delete_meta( 1, '84em_ai_analysis' );
+
+		ob_start();
+		$this->processor->display_ai_analysis( $this->test_form, $this->test_entry );
+		$output = ob_get_clean();
+
+		// Should not have delete button
+		$this->assertStringNotContainsString( 'delete-analysis', $output );
+		$this->assertStringNotContainsString( 'dashicons-trash', $output );
+
+		// Should have analyze button instead
+		$this->assertStringContainsString( 'analyze-entry', $output );
+		$this->assertStringContainsString( 'Analyze Now', $output );
+	}
+
+	/**
+	 * Test JavaScript confirmation in delete button
+	 */
+	public function test_display_includes_delete_confirmation() {
+		gform_update_meta( 1, '84em_ai_analysis', 'Test analysis' );
+
+		ob_start();
+		$this->processor->display_ai_analysis( $this->test_form, $this->test_entry );
+		$output = ob_get_clean();
+
+		// Check for confirmation dialog in JavaScript
+		$this->assertStringContainsString( 'confirm(', $output );
+		$this->assertStringContainsString( 'Are you sure you want to delete this AI analysis?', $output );
+		$this->assertStringContainsString( '84em_gf_ai_delete_analysis', $output );
+	}
 }

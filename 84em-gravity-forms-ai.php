@@ -3,7 +3,7 @@
  * Plugin Name: 84EM Gravity Forms Entry AI Analysis
  * Plugin URI: https://84em.com
  * Description: Analyzes Gravity Forms submissions using Claude AI and stores insights as markdown in entry meta
- * Version: 1.1.1
+ * Version: 1.1.2
  * Author: 84EM
  * Author URI: https://84em.com
  * License: GPL v2 or later
@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Define plugin constants
-define( 'EIGHTYFOUREM_GF_AI_VERSION', '1.1.1' );
+define( 'EIGHTYFOUREM_GF_AI_VERSION', '1.1.2' );
 define( 'EIGHTYFOUREM_GF_AI_FILE', __FILE__ );
 define( 'EIGHTYFOUREM_GF_AI_PATH', plugin_dir_path( __FILE__ ) );
 define( 'EIGHTYFOUREM_GF_AI_URL', plugin_dir_url( __FILE__ ) );
