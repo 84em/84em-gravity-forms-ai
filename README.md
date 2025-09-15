@@ -12,6 +12,7 @@ WordPress plugin that integrates Claude AI with Gravity Forms to provide intelli
 - 💬 Custom prompts per form or globally
 - 📥 View analysis report in new browser tab with client-side markdown rendering
 - 🔄 Manual analysis/re-analysis from entry detail page
+- 🗑️ Delete analysis with confirmation prompt and audit trail
 - ✨ Uses Marked.js for consistent markdown-to-HTML conversion
 
 ## Requirements
@@ -280,6 +281,12 @@ add_action('84em_gf_ai_analysis_failed', function($entry_id, $error, $form_id) {
     // Handle analysis failures
     // For example, log to external service, send alert, etc.
 }, 10, 3);
+
+// After analysis is deleted
+add_action('84em_gf_ai_analysis_deleted', function($entry_id) {
+    // Handle post-deletion tasks
+    // For example, clean up related data, notify systems, etc.
+}, 10, 1);
 ```
 
 ## Troubleshooting

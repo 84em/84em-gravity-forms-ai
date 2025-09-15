@@ -5,6 +5,20 @@ All notable changes to the 84EM Gravity Forms Entry AI Analysis plugin will be d
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.1] - 2025-09-15
+
+### Added
+- Delete button in AI Analysis metabox to remove analysis data from entries
+- Confirmation dialog before deleting analysis to prevent accidental removal
+- Audit trail via entry notes when analysis is deleted
+- New AJAX handler `84em_gf_ai_delete_analysis` with proper permission checks
+- New action hook `84em_gf_ai_analysis_deleted` fired after deletion
+- Trash icon indicator for delete button with red color styling
+
+### Changed
+- Updated button layout in AI Analysis metabox to accommodate delete action
+- Enhanced security with `gravityforms_edit_entries` capability requirement for deletion
+
 ## [1.1.0] - 2025-09-13
 
 ### Added
