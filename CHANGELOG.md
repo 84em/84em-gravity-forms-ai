@@ -5,6 +5,25 @@ All notable changes to the 84EM Gravity Forms Entry AI Analysis plugin will be d
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.2] - 2025-09-15
+
+### Added
+- Comprehensive test coverage for delete functionality (8 new tests)
+- Tests for AJAX delete handler with various scenarios
+- Tests for delete button UI rendering conditions
+- Tests for permission and security checks
+- Updated test documentation in tests/README.md
+
+### Testing
+- `test_ajax_delete_analysis_success` - Verifies successful deletion
+- `test_ajax_delete_analysis_no_permission` - Tests permission checks
+- `test_ajax_delete_analysis_invalid_nonce` - Validates nonce security
+- `test_ajax_delete_analysis_invalid_entry` - Handles invalid entries
+- `test_ajax_delete_removes_error_meta` - Ensures complete cleanup
+- `test_display_shows_delete_button_with_analysis` - Button display logic
+- `test_display_no_delete_button_without_analysis` - Conditional rendering
+- `test_display_includes_delete_confirmation` - Confirmation dialog
+
 ## [1.1.1] - 2025-09-15
 
 ### Added
