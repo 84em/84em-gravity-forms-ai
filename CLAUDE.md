@@ -39,11 +39,13 @@ All PHP classes use the namespace `EightyFourEM\GravityFormsAI\` with PSR-4 auto
 
 1. **Entry Processing** (`includes/Core/EntryProcessor.php`)
    - Hooks into Gravity Forms entry detail sidebar via `gform_entry_detail_sidebar_middle`
-   - Provides manual analysis trigger
+   - Provides manual analysis trigger and delete functionality
    - Stores raw markdown in entry meta
    - Handles HTML export with client-side markdown conversion using Marked.js
    - Auto-includes all text fields when no mapping configured (smart defaults)
    - Falls back to global enable setting when form-specific setting not configured
+   - Delete button with confirmation prompt removes all analysis data
+   - Adds entry note when analysis is deleted for audit trail
 
 2. **API Integration** (`includes/Core/APIHandler.php`)
    - Manages Claude API communication using WordPress HTTP API
@@ -139,8 +141,9 @@ The plugin supports these models (defined in Settings.php):
 ## AJAX Actions
 
 All AJAX actions use nonce verification and capability checks:
-- `84em_gf_ai_analyze_entry` - Manual entry analysis trigger
+- `84em_gf_ai_analyze_entry` - Manual entry analysis trigger (requires `gravityforms_view_entries`)
 - `84em_gf_ai_download_html` - Generate HTML export
+- `84em_gf_ai_delete_analysis` - Delete AI analysis from entry (requires `gravityforms_edit_entries`)
 - `84em_gf_ai_save_field_mapping` - Save form field mappings
 - `84em_gf_ai_test_api` - Test API connection
 - `84em_gf_ai_get_log_details` - View detailed log entry
