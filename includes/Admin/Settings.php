@@ -7,6 +7,7 @@
 
 namespace EightyFourEM\GravityFormsAI\Admin;
 
+use EightyFourEM\GravityFormsAI\Core\APIHandler;
 use EightyFourEM\GravityFormsAI\Core\Encryption;
 
 /**
@@ -244,36 +245,30 @@ class Settings {
                                     <label for="84em_gf_ai_model"><?php esc_html_e( 'Claude Model', '84em-gf-ai' ); ?></label>
                                 </th>
                                 <td>
-                                    <select id="84em_gf_ai_model" name="84em_gf_ai_model">
-                                        <?php
-                                        $models        = [
-                                            // Claude Opus Family (Most Capable)
-                                            'claude-opus-4-1-20250805'   => 'Claude Opus 4.1 (Latest, Most Capable)',
-                                            'claude-opus-4-20250514'     => 'Claude Opus 4 (Advanced)',
-
-                                            // Claude Sonnet Family (Balanced)
-                                            'claude-sonnet-4-20250514'   => 'Claude Sonnet 4 (1M Context - Beta)',
-                                            'claude-3-7-sonnet-20250219' => 'Claude 3.7 Sonnet (Hybrid Reasoning)',
-
-                                            // Claude Haiku Family (Fast)
-                                            'claude-3-5-haiku-20241022'  => 'Claude 3.5 Haiku (Fast, Recommended)',
-                                            'claude-3-haiku-20240307'    => 'Claude 3 Haiku (Previous Fast)',
-
-                                            // Deprecated Models (Still Functional)
-                                            'claude-3-5-sonnet-20241022' => 'Claude 3.5 Sonnet (Deprecated)',
-                                            'claude-3-opus-20240229'     => 'Claude 3 Opus (Deprecated)',
-                                        ];
-                                        $current_model = get_option( '84em_gf_ai_model', 'claude-3-5-haiku-20241022' );
-                                        foreach ( $models as $value => $label ) {
-                                            printf(
-                                                '<option value="%s" %s>%s</option>',
-                                                esc_attr( $value ),
-                                                selected( $current_model, $value, false ),
-                                                esc_html( $label )
-                                            );
-                                        }
+                                    <?php
+                                    $api_handler = new APIHandler();
+                                    $models = $api_handler->models();
+                                    if ( ! is_array( $models ) || empty( $models ) ) {
+                                        echo '<p class="description">'.esc_html__('No models found. Please check your API key.', '84em-gf-ai').'</p>';
+                                    }
+                                    else {
                                         ?>
-                                    </select>
+                                        <select id="84em_gf_ai_model" name="84em_gf_ai_model">
+                                            <?php
+                                            $current_model = get_option( '84em_gf_ai_model', array_key_first( $models ) );
+                                            foreach ( $models as $value => $label ) {
+                                                printf(
+                                                        '<option value="%s" %s>%s</option>',
+                                                        esc_attr( $value ),
+                                                        selected( $current_model, $value, false ),
+                                                        esc_html( $label )
+                                                );
+                                            }
+                                            ?>
+                                        </select>
+                                        <?php
+                                    }
+                                    ?>
                                 </td>
                             </tr>
                             <tr>

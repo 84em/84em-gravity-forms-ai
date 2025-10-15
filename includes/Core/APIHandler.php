@@ -13,11 +13,11 @@ namespace EightyFourEM\GravityFormsAI\Core;
 class APIHandler {
 
     /**
-     * API endpoint
+     * Base API endpoint
      *
      * @var string
      */
-    private $api_url = 'https://api.anthropic.com/v1/messages';
+    private $api_url = 'https://api.anthropic.com/v1';
 
     /**
      * API version
@@ -32,6 +32,90 @@ class APIHandler {
      * @var int
      */
     private static $last_request_time = 0;
+
+    /**
+     * Get list of available models
+     */
+    public function models($data = []) {
+
+        if ( false === ( $models_array = get_transient( '84em_gf_ai_models' ) ) ) {
+
+            // id => name array to return
+            $models_array = [];
+
+            // Get API key
+            $encryption = new Encryption();
+            $api_key    = $encryption->get_api_key();
+
+            if ( ! $api_key ) {
+                return [
+                    'success' => false,
+                    'error'   => __( 'API key not configured.', '84em-gf-ai' ),
+                ];
+            }
+
+            // Apply rate limiting
+            $this->apply_rate_limit();
+
+            $response = wp_remote_get( $this->api_url . '/models', [
+                'timeout' => 30,
+                'headers' => [
+                    'Content-Type'      => 'application/json',
+                    'x-api-key'         => $api_key,
+                    'anthropic-version' => $this->api_version,
+                ],
+            ] );
+
+            // Log the request if enabled
+            if ( get_option( '84em_gf_ai_enable_logging' ) ) {
+                $this->log_request( ['/request'], $response, $data );
+
+                // Purge old logs based on retention setting
+                $this->purge_old_logs();
+            }
+
+            // Handle errors
+            if ( is_wp_error( $response ) ) {
+                return [
+                    'success' => false,
+                    'error'   => $response->get_error_message(),
+                ];
+            }
+
+            $response_code = wp_remote_retrieve_response_code( $response );
+            $response_body = wp_remote_retrieve_body( $response );
+            $response_data = json_decode( $response_body, true );
+
+            if ( $response_code !== 200 ) {
+                $error_message = $response_data['error']['message'] ?? __( 'API request failed.', '84em-gf-ai' );
+                return [
+                    'success' => false,
+                    'error'   => $error_message,
+                    'code'    => $response_code,
+                ];
+            }
+
+            if ( isset( $response_data['data'][0]['id'] ) ) {
+
+                foreach($response_data['data'] as $model) {
+                    $models_array[$model['id']] = $model['display_name'];
+                }
+
+                set_transient( '84em_gf_ai_models', $models_array, 15 * MINUTE_IN_SECONDS );
+
+                return $models_array;
+            }
+
+            return [
+                'success' => false,
+                'error'   => __( 'Invalid API response format.', '84em-gf-ai' ),
+            ];
+        }
+        else {
+            return $models_array;
+        }
+    }
+
 
     /**
      * Make API request
@@ -82,7 +166,7 @@ class APIHandler {
         ];
 
         // Make the request
-        $response = wp_remote_post( $this->api_url, [
+        $response = wp_remote_post( $this->api_url . '/messages', [
             'timeout' => 30,
             'headers' => [
                 'Content-Type'      => 'application/json',
