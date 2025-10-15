@@ -124,7 +124,19 @@ This allows development without building while using optimized assets in product
 
 ## Available Claude Models
 
-The plugin supports all models currently available in the Claude API.
+The plugin supports these models (defined in Settings.php):
+
+**Current Models:**
+- `claude-opus-4-1-20250805` - Claude Opus 4.1 - Latest, most capable
+- `claude-opus-4-20250514` - Claude Opus 4 - Advanced capabilities
+- `claude-sonnet-4-20250514` - Claude Sonnet 4 - 1M token context (Beta)
+- `claude-3-7-sonnet-20250219` - Claude 3.7 Sonnet - Hybrid reasoning
+- `claude-3-5-haiku-20241022` - Claude 3.5 Haiku - Fast, recommended default
+- `claude-3-haiku-20240307` - Claude 3 Haiku - Previous fast model
+
+**Deprecated Models (Still Functional):**
+- `claude-3-5-sonnet-20241022` - Claude 3.5 Sonnet - Deprecated by Anthropic
+- `claude-3-opus-20240229` - Claude 3 Opus - Deprecated by Anthropic
 
 ## AJAX Actions
 
